@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 // import './App.css';
 import styled from 'styled-components';
 import { createGlobalStyle } from 'styled-components';
-import Words from './components/Words/Words';
+import TypeSwitch from 'type-switch';
 
 //* Styles
 
@@ -84,19 +84,29 @@ class App extends Component {
       word: []
     };
     this.init = this.init.bind(this);
-    this.showWord = this.showWord.bind(this);
+    this.createWord = this.createWord.bind(this);
+    this.TypeSwitch = new TypeSwitch({ stubbornMode: true });
   }
-  showWord = words => {
-    const randIndex = Math.floor(Math.random() * words.length);
-    // output random word
-    return words[randIndex];
-  };
 
   init(e) {
-    this.setState({ isPlaying: true, word: this.showWord(words) });
+    this.setState({ isPlaying: true, word: this.createWord(words) });
+    this.TypeSwitch.start('eventually');
     // this.showWord(words);
     console.log(renderedWord);
+    console.log(TypeSwitch);
   }
+  createWord = array => {
+    const randIndex = Math.floor(Math.random() * words.length);
+    return array[randIndex].split('').map((letter, index) => {
+      var letterElement = (
+        <p className="letter" key={index}>
+          {letter}
+        </p>
+      );
+      return letterElement;
+    });
+  };
+  // match currentWord to keyInput
 
   render() {
     return (
