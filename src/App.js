@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-// import './App.css';
+import './App.css';
+import Word from './components/Words/Word';
 import styled from 'styled-components';
 import { createGlobalStyle } from 'styled-components';
 import TypeSwitch from 'type-switch';
@@ -81,34 +82,46 @@ class App extends Component {
     this.state = {
       score: 0,
       isPlaying: false,
-      word: []
+      words: []
     };
     this.init = this.init.bind(this);
-    this.createWord = this.createWord.bind(this);
+    // this.createWord = this.createWord.bind(this);
+    this.setWords = this.setWords.bind(this);
+    this.trackKeys = this.trackKeys.bind(this);
     this.TypeSwitch = new TypeSwitch({ stubbornMode: true });
   }
 
+  setWords(words) {
+    return words.map(word => (word.split('')));
+  }
+
   init(e) {
-    this.setState({ isPlaying: true, word: this.createWord(words) });
+    this.setState({ isPlaying: true, words: this.setWords(words) });
     this.TypeSwitch.start('eventually');
     // this.showWord(words);
-    console.log(renderedWord);
-    console.log(TypeSwitch);
+    // console.log(renderedWord);
+    // console.log(TypeSwitch);
+    window.addEventListener('keydown', event => (this.trackKeys(event.key)));
   }
-  createWord = array => {
-    const randIndex = Math.floor(Math.random() * words.length);
-    return array[randIndex].split('').map((letter, index) => {
-      var letterElement = (
-        <p className="letter" key={index}>
-          {letter}
-        </p>
-      );
-      return letterElement;
-    });
-  };
+  
+  // createWord = array => {
+  //   const randIndex = Math.floor(Math.random() * words.length);
+  //   return array[randIndex].split('').map((letter, index) => {
+  //     var letterElement = (
+  //       <p className="letter" key={index}>
+  //         {letter}
+  //       </p>
+  //     );
+  //     return letterElement;
+  //   });
+  // };
   // match currentWord to keyInput
+  trackKeys(key) {
+    console.log(key);
+  }
 
   render() {
+    console.log(this.state);
     return (
       <AppWrapper className="wrapper">
         <AppHeader> Hype Type</AppHeader>
@@ -118,8 +131,17 @@ class App extends Component {
           <button onClick={this.init}>Start</button>
         </AppSidebar>
         <AppContent>
-          Game Content
-          <h2>{this.state.word}</h2>
+          {/* Game Content */}
+          {
+            this.state.words ? (
+              this.state.words.map((word, i) => (
+                <Word word={word.join('')} key={i} />
+              ))
+            ) : (
+              null
+            )
+          }
+          {/*<h2>{this.state.words}</h2> */}
         </AppContent>
 
         {/* <footer className="footer">My footer</footer> */}
