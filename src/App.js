@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import styled from 'styled-components';
 import { createGlobalStyle } from 'styled-components';
 import TypeSwitch from 'type-switch';
+import Word from './components/Word/Word';
 
 //* Styles
 
@@ -72,7 +73,6 @@ const AppSidebar = styled.aside`
   }
 `;
 //* -------------------------------------------------------------------------
-const renderedWord = document.querySelector('#rendered-word');
 const words = ['ward', 'shout', 'debut', 'rehearsal', 'charge', 'realize'];
 
 class App extends Component {
@@ -81,20 +81,60 @@ class App extends Component {
     this.state = {
       score: 0,
       isPlaying: false,
-      word: []
+      word: ''
     };
     this.init = this.init.bind(this);
     this.createWord = this.createWord.bind(this);
+    // this.reduceLetters = this.reduceLetters.bind(this);
     this.TypeSwitch = new TypeSwitch({ stubbornMode: true });
+    this.letters = 'abcdefghijklmnopqrstuvwxyz';
+    this.TypeSwitch.on('incorrect', () => {
+      this.totalKeystrokes++;
+      this.totalMistakes++;
+      this.updateStats(
+        'accuracy',
+        (1 - this.totalMistakes / this.totalKeystrokes) * 100
+      );
+      this.updateStats(
+        'score',
+        this.state.stats.score > 0 ? this.state.stats.score - 25 : 0
+      );
+      this.updateStats('currentStreak', 0);
+      alert('wrong key');
+    });
+    this.TypeSwitch.on('correct', () => {
+      this.totalKeystrokes++;
+      this.updateStats(
+        'accuracy',
+        (1 - this.totalMistakes / this.totalKeystrokes) * 100
+      );
+      this.updateStats('currentStreak', this.state.stats.currentStreak + 1);
+      this.updateStats(
+        'longestStreak',
+        this.state.stats.currentStreak > this.state.stats.longestStreak
+          ? this.state.stats.currentStreak
+          : this.state.stats.longestStreak
+      );
+      this.changeLetterColor(
+        'letter',
+        this.TypeSwitch.getGameStats().currentIndex
+      );
+    });
+    this.TypeSwitch.on('complete', () => {
+      setTimeout(() => {
+        document.addEventListener('keypress', this.findWord, false);
+      });
+    });
   }
 
   init(e) {
-    this.setState({ isPlaying: true, word: this.createWord(words) });
-    this.TypeSwitch.start('eventually');
-    // this.showWord(words);
-    console.log(renderedWord);
-    console.log(TypeSwitch);
+    this.setState({ isPlaying: true });
+    var theWord = {};
+    theWord.letterArray = this.createWord(words);
+    console.log(theWord.letterArray);
+    return theWord;
   }
+
   createWord = array => {
     const randIndex = Math.floor(Math.random() * words.length);
     return array[randIndex].split('').map((letter, index) => {
@@ -106,7 +146,28 @@ class App extends Component {
       return letterElement;
     });
   };
-  // match currentWord to keyInput
+  changeLetterColor = (target, letterIndex) => {
+    var wordContainer = document.querySelector(target);
+    var letterArray = wordContainer.childNodes;
+    for (var i = 0; i < letterIndex; i++) {
+      letterArray[i].style.color = '#f44336';
+    }
+  };
+
+  findWord(e) {
+    var pressedCharCode = typeof e.which === 'number' ? e.which : e.keycode;
+    var pressedKeyChar = String.fromCharCode(pressedCharCode);
+    var wordFound = false;
+    this.totalKeystrokes++;
+
+    // if (this.state.word.charAt(0) === pressedKeyChar)
+  }
+  // reduceLetters(wordBank) {
+  //   var availableCharacter = this.letters[
+  //     Math.floor(Math.random() * this.letters.length)
+  //   ];
+  //   var newWord =
+  // }
 
   render() {
     return (
@@ -119,7 +180,13 @@ class App extends Component {
         </AppSidebar>
         <AppContent>
           Game Content
-          <h2>{this.state.word}</h2>
+          <Word
+            init={this.init}
+            createWord={this.letterElement}
+            word={this.theWord}
+          >
+            {' '}
+          </Word>
         </AppContent>
 
         {/* <footer className="footer">My footer</footer> */}
