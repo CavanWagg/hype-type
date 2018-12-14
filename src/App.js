@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
-// import './App.css';
 import styled from 'styled-components';
+import helpers from './utils/helpers';
 import { createGlobalStyle } from 'styled-components';
 import TypeSwitch from 'type-switch';
-import Word from './components/Word/Word';
+import wordBank from './data/wordBank';
+import Word from './components/Word';
+import waves from './data/waves';
 
 //* Styles
 
@@ -73,7 +75,6 @@ const AppSidebar = styled.aside`
   }
 `;
 //* -------------------------------------------------------------------------
-const words = ['ward', 'shout', 'debut', 'rehearsal', 'charge', 'realize'];
 
 class App extends Component {
   constructor(props) {
@@ -81,10 +82,10 @@ class App extends Component {
     this.state = {
       score: 0,
       isPlaying: false,
-      word: ''
+      fallingWords: []
     };
+    this.waveCount = 0;
     this.init = this.init.bind(this);
-    this.createWord = this.createWord.bind(this);
     // this.reduceLetters = this.reduceLetters.bind(this);
     this.TypeSwitch = new TypeSwitch({ stubbornMode: true });
     this.letters = 'abcdefghijklmnopqrstuvwxyz';
@@ -127,49 +128,55 @@ class App extends Component {
     });
   }
 
-  init(e) {
+  init() {
     this.setState({ isPlaying: true });
-    var theWord = {};
-    theWord.letterArray = this.createWord(words);
-    console.log(theWord.letterArray);
-    return theWord;
-  }
-
-  createWord = array => {
-    const randIndex = Math.floor(Math.random() * words.length);
-    return array[randIndex].split('').map((letter, index) => {
-      var letterElement = (
-        <p className="letter" key={index}>
-          {letter}
-        </p>
+    var waveData = waves(this.waveCount);
+    var newWave = waveData.map((enemy, index) => {
+      var typeWord = {};
+      typeWord.componentIdentifier = '[data-enemy="' + index + '"]';
+      typeWord.wordIdentifier = '[data-word="' + index + '"]';
+      typeWord.containerIdentifier = '[data-container="' + index + '"]';
+      typeWord.isDead = false;
+      var wordString = this.reduceLetters(wordBank.word);
+      // the word is a string
+      typeWord.word = wordString;
+      // letter array of word
+      typeWord.letterArray = helpers.createWord(typeWord.word);
+      typeWord.component = (
+        <Word
+          key={this.waveCount.toString() + index}
+          enemyIndex={index}
+          letterArray={typeWord.letterArray}
+          reduceLetters={this.reduceLetters}
+        />
       );
-      return letterElement;
+      return typeWord;
     });
-  };
-  changeLetterColor = (target, letterIndex) => {
-    var wordContainer = document.querySelector(target);
-    var letterArray = wordContainer.childNodes;
-    for (var i = 0; i < letterIndex; i++) {
-      letterArray[i].style.color = '#f44336';
-    }
-  };
-
-  findWord(e) {
-    var pressedCharCode = typeof e.which === 'number' ? e.which : e.keycode;
-    var pressedKeyChar = String.fromCharCode(pressedCharCode);
-    var wordFound = false;
-    this.totalKeystrokes++;
-
-    // if (this.state.word.charAt(0) === pressedKeyChar)
+    console.log(this.waveCount);
+    this.setState({ fallingWords: newWave });
   }
-  // reduceLetters(wordBank) {
-  //   var availableCharacter = this.letters[
-  //     Math.floor(Math.random() * this.letters.length)
-  //   ];
-  //   var newWord =
-  // }
+
+  reduceLetters(wordBank) {
+    // random letter
+    var availableCharacter = this.letters[
+      Math.floor(Math.random() * this.letters.length)
+    ];
+    // returns an array of all the words in the wordbank that start with the availableCharacter.
+    var availableWordArray = wordBank.filter(word => {
+      return word.charAt(0) === availableCharacter ? true : false;
+    });
+    // returns a random word(string) that is from the availableWordArray.
+    var newWord =
+      availableWordArray[Math.floor(Math.random() * availableWordArray.length)];
+    this.letters = this.letters.replace(newWord.charAt(0), '');
+    return newWord;
+  }
 
   render() {
+    var allTheWords = this.state.fallingWords.map(word => {
+      return word.component;
+    });
+    console.log(allTheWords);
     return (
       <AppWrapper className="wrapper">
         <AppHeader> Hype Type</AppHeader>
@@ -180,16 +187,8 @@ class App extends Component {
         </AppSidebar>
         <AppContent>
           Game Content
-          <Word
-            init={this.init}
-            createWord={this.letterElement}
-            word={this.theWord}
-          >
-            {' '}
-          </Word>
+          {allTheWords}
         </AppContent>
-
-        {/* <footer className="footer">My footer</footer> */}
         <GlobalStyle />
       </AppWrapper>
     );
