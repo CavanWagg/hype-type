@@ -24,6 +24,9 @@ const GlobalStyle = createGlobalStyle`
   p {
   margin: 0 0 1em 0;
   }
+  .word{
+    display: flex
+  }
   @supports (display: grid) {
     .wrapper > * {
     width: auto;
@@ -86,50 +89,27 @@ class App extends Component {
     };
     this.waveCount = 0;
     this.init = this.init.bind(this);
-    // this.reduceLetters = this.reduceLetters.bind(this);
+    this.findWord = this.findWord.bind(this);
+    this.currentEnemyIndex = null;
+    this.currentEnemy = null;
+    this.reduceLetters = this.reduceLetters.bind(this);
     this.TypeSwitch = new TypeSwitch({ stubbornMode: true });
     this.letters = 'abcdefghijklmnopqrstuvwxyz';
-    this.TypeSwitch.on('incorrect', () => {
-      this.totalKeystrokes++;
-      this.totalMistakes++;
-      this.updateStats(
-        'accuracy',
-        (1 - this.totalMistakes / this.totalKeystrokes) * 100
-      );
-      this.updateStats(
-        'score',
-        this.state.stats.score > 0 ? this.state.stats.score - 25 : 0
-      );
-      this.updateStats('currentStreak', 0);
-      alert('wrong key');
-    });
-    this.TypeSwitch.on('correct', () => {
-      this.totalKeystrokes++;
-      this.updateStats(
-        'accuracy',
-        (1 - this.totalMistakes / this.totalKeystrokes) * 100
-      );
-      this.updateStats('currentStreak', this.state.stats.currentStreak + 1);
-      this.updateStats(
-        'longestStreak',
-        this.state.stats.currentStreak > this.state.stats.longestStreak
-          ? this.state.stats.currentStreak
-          : this.state.stats.longestStreak
-      );
-      this.changeLetterColor(
-        'letter',
-        this.TypeSwitch.getGameStats().currentIndex
-      );
-    });
-    this.TypeSwitch.on('complete', () => {
-      setTimeout(() => {
-        document.addEventListener('keypress', this.findWord, false);
-      });
-    });
+    // this.TypeSwitch.on('incorrect', () => {
+    //   alert('wrong key');
+    // });
+    // this.TypeSwitch.on('correct', () => {
+    // });
+    // this.TypeSwitch.on('complete', () => {
+    //   setTimeout(() => {
+    //     document.addEventListener('keypress', this.findWord, false);
+    //   });
+    // });
   }
 
   init() {
     this.setState({ isPlaying: true });
+    document.addEventListener('keypress', this.findWord, false);
     var waveData = waves(this.waveCount);
     var newWave = waveData.map((enemy, index) => {
       var typeWord = {};
@@ -140,7 +120,6 @@ class App extends Component {
       var wordString = this.reduceLetters(wordBank.word);
       // the word is a string
       typeWord.word = wordString;
-      // letter array of word
       typeWord.letterArray = helpers.createWord(typeWord.word);
       typeWord.component = (
         <Word
@@ -148,11 +127,11 @@ class App extends Component {
           enemyIndex={index}
           letterArray={typeWord.letterArray}
           reduceLetters={this.reduceLetters}
+          containerIdentifier={typeWord.containerIdentifier}
         />
       );
       return typeWord;
     });
-    console.log(this.waveCount);
     this.setState({ fallingWords: newWave });
   }
 
@@ -172,11 +151,28 @@ class App extends Component {
     return newWord;
   }
 
+  findWord(e) {
+    var pressedCharCode = typeof e.which === 'number' ? e.which : e.keycode;
+    var pressedKeyChar = String.fromCharCode(pressedCharCode);
+    var wordFound = false;
+    this.state.fallingWords.forEach((target, index) => {
+      if (target.word.charAt(0) === pressedKeyChar) {
+        wordFound = true;
+        this.currentEnemyIndex = index;
+        this.currentEnemy = target;
+        this.TypeSwitch.changeCurrentIndex(1);
+        this.TypeSwitch.start(target.word);
+        this.TypeSwitch.broadcast('targetAcquired');
+        helpers.changeLetterColor(this.currentEnemy.wordIdentifier, 1);
+        document.removeEventListener('keypress', this.findWord);
+      }
+    });
+  }
+
   render() {
     var allTheWords = this.state.fallingWords.map(word => {
       return word.component;
     });
-    console.log(allTheWords);
     return (
       <AppWrapper className="wrapper">
         <AppHeader> Hype Type</AppHeader>
