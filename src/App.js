@@ -25,7 +25,12 @@ const GlobalStyle = createGlobalStyle`
   margin: 0 0 1em 0;
   }
   .word{
-    display: flex
+    display: flex;
+  }
+  .letter {
+    color: black;
+    font-weight: bold;
+    background: aqua;
   }
   @supports (display: grid) {
     .wrapper > * {
@@ -83,32 +88,94 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      score: 0,
-      isPlaying: false,
+      stats: {
+        score: 0,
+        currentStreak: 0,
+        longestStreak: 0,
+        accuracy: 100
+      },
       fallingWords: []
     };
-    this.waveCount = 0;
-    this.init = this.init.bind(this);
-    this.findWord = this.findWord.bind(this);
+    this.letters = 'abcdefghijklmnopqrstuvwxyz';
     this.currentEnemyIndex = null;
     this.currentEnemy = null;
+    this.waveCount = 0;
+    this.queueNextWave = this.queueNextWave.bind(this);
+    this.findWord = this.findWord.bind(this);
+    this.handleClick = this.handleClick.bind(this);
     this.reduceLetters = this.reduceLetters.bind(this);
     this.TypeSwitch = new TypeSwitch({ stubbornMode: true });
-    this.letters = 'abcdefghijklmnopqrstuvwxyz';
-    // this.TypeSwitch.on('incorrect', () => {
-    //   alert('wrong key');
-    // });
-    // this.TypeSwitch.on('correct', () => {
-    // });
-    // this.TypeSwitch.on('complete', () => {
-    //   setTimeout(() => {
-    //     document.addEventListener('keypress', this.findWord, false);
-    //   });
-    // });
+    this.TypeSwitch.on('incorrect', () => {
+      this.totalKeystrokes++;
+      this.totalMistakes++;
+      this.updateStats(
+        'accuracy',
+        (1 - this.totalMistakes / this.totalKeystrokes) * 100
+      );
+      this.updateStats(
+        'score',
+        this.state.stats.score > 0 ? this.state.stats.score - 25 : 0
+      );
+      this.updateStats('currentStreak', 0);
+    });
+    this.TypeSwitch.on('correct', () => {
+      this.totalKeystrokes++;
+      this.updateStats(
+        'accuracy',
+        (1 - this.totalMistakes / this.totalKeystrokes) * 100
+      );
+      this.updateStats('currentStreak', this.state.stats.currentStreak + 1);
+      this.updateStats(
+        'longestStreak',
+        this.state.stats.currentStreak > this.state.stats.longestStreak
+          ? this.state.stats.currentStreak
+          : this.state.stats.longestStreak
+      );
+
+      this.TypeSwitch.broadcast('targetAcquired');
+      helpers.changeLetterColor(
+        this.currentEnemy.wordIdentifier,
+        this.TypeSwitch.getGameStats().currentIndex
+      );
+    });
+    this.TypeSwitch.on('complete', () => {
+      this.removeWord();
+      var remainingEnemies = this.state.fallingWords.filter(enemy => {
+        return !enemy.isDead;
+      });
+      if (remainingEnemies.length === 0) {
+        this.queueNextWave();
+      } else {
+        setTimeout(() => {
+          document.addEventListener('keypress', this.findWord, false);
+        });
+      }
+    });
   }
 
-  init() {
-    this.setState({ isPlaying: true });
+  queueNextWave() {
+    if (!this.waveCount) {
+      this.TypeSwitch.broadcast('gamestart');
+      this.setState({
+        stats: {
+          score: 0,
+          currentStreak: 0,
+          longestStreak: 0,
+          accuracy: 100
+        }
+      });
+    }
+    this.waveCount++;
+    setTimeout(() => {
+      this.setState({
+        fallingWords: [],
+        waveLaunching: true
+      });
+      this.launchWave();
+    }, 1000);
+  }
+
+  launchWave() {
     document.addEventListener('keypress', this.findWord, false);
     var waveData = waves(this.waveCount);
     var newWave = waveData.map((enemy, index) => {
@@ -169,6 +236,43 @@ class App extends Component {
     });
   }
 
+  updateStats(key, value) {
+    var adjustedStats = this.state.stats;
+    adjustedStats[key] = value;
+    this.setState({
+      stats: adjustedStats
+    });
+  }
+
+  removeWord() {
+    this.letters = this.letters + this.currentEnemy.word.charAt(0);
+    helpers.changeLetterColor(
+      this.currentEnemy.wordIdentifier,
+      this.TypeSwitch.getGameStats().currentIndex
+    );
+
+    var adjustedWordArray = this.state.fallingWords;
+    var adjustedWord = adjustedWordArray[this.currentEnemyIndex];
+    adjustedWord.isDead = true;
+    this.updateStats('score', this.state.stats.score + 200);
+    this.setState({
+      fallingWords: adjustedWordArray
+    });
+
+    this.currentEnemy = null;
+    this.currentEnemyIndex = null;
+    this.TypeSwitch.resetGame();
+  }
+
+  handleClick() {
+    var button = document.getElementById('start');
+    button.addEventListener('click', hideshow, false);
+    function hideshow() {
+      this.style.display = 'none';
+    }
+    this.queueNextWave();
+  }
+
   render() {
     var allTheWords = this.state.fallingWords.map(word => {
       return word.component;
@@ -179,11 +283,13 @@ class App extends Component {
         <AppSidebar>
           {' '}
           Score {this.state.score}
-          <button onClick={this.init}>Start</button>
+          <button id="start" onClick={this.handleClick}>
+            Start
+          </button>
         </AppSidebar>
         <AppContent>
           Game Content
-          {allTheWords}
+          <div className="word-space">{allTheWords}</div>
         </AppContent>
         <GlobalStyle />
       </AppWrapper>

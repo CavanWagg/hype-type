@@ -15,10 +15,9 @@ helpers.createWord = string => {
 
 helpers.changeLetterColor = (target, letterIndex) => {
   var wordContainer = document.querySelector(target);
-  console.log(document.querySelector(target));
   var letterArray = wordContainer.childNodes;
   for (var i = 0; i < letterIndex; i++) {
-    letterArray[i].style.color = 'Tomato';
+    letterArray[i].style.color = 'purple';
   }
 };
 
