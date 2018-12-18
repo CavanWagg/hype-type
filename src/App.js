@@ -73,7 +73,7 @@ const AppSidebar = styled.aside`
   }
 `;
 //* -------------------------------------------------------------------------
-const renderedWord = document.querySelector('#rendered-word');
+// const renderedWord = document.querySelector('#rendered-word');
 const words = ['ward', 'shout', 'debut', 'rehearsal', 'charge', 'realize'];
 
 class App extends Component {
@@ -82,26 +82,31 @@ class App extends Component {
     this.state = {
       score: 0,
       isPlaying: false,
-      words: []
+      words: [],
+      currentWordIndex: 'none'
     };
     this.init = this.init.bind(this);
     // this.createWord = this.createWord.bind(this);
     this.setWords = this.setWords.bind(this);
-    this.trackKeys = this.trackKeys.bind(this);
+    this.trackKeysInWords = this.trackKeysInWords.bind(this);
     this.TypeSwitch = new TypeSwitch({ stubbornMode: true });
   }
 
   setWords(words) {
-    return words.map(word => (word.split('')));
+    return words.map(word => ({
+      word,
+      lettersTyped: [],
+      lettersLeft: word.split('')
+    }));
   }
 
-  init(e) {
+  init() {
     this.setState({ isPlaying: true, words: this.setWords(words) });
     this.TypeSwitch.start('eventually');
     // this.showWord(words);
     // console.log(renderedWord);
     // console.log(TypeSwitch);
-    window.addEventListener('keydown', event => (this.trackKeys(event.key)));
+    window.addEventListener('keypress', this.trackKeysInWords);
   }
   
   // createWord = array => {
@@ -115,13 +120,55 @@ class App extends Component {
   //     return letterElement;
   //   });
   // };
-  // match currentWord to keyInput
-  trackKeys(key) {
-    console.log(key);
+  // handle key input
+  trackKeysInWords(e) {
+    this.setState(state => {
+      console.log(state);
+      let stateUpdate;
+      if (state.currentWordIndex === 'none') {
+        for (let i = 0; i < state.words.length; i++) {
+          if (e.key === state.words[i].lettersLeft[0]) {
+            stateUpdate = { 
+              currentWordIndex: i,
+              words: state.words.map((word, index) => {
+                if (index === i) {
+                  return {
+                    word: word.word,
+                    lettersTyped: word.lettersLeft.slice(0, 1),
+                    lettersLeft: word.lettersLeft.slice(1)
+                  };
+                }
+                return word;
+              })
+            };
+            break;
+          }
+        }
+      } else if (e.key === state.words[state.currentWordIndex].lettersLeft[0]) {
+        stateUpdate = {
+          words: state.words.map((word, index) => {
+            if (index === state.currentWordIndex) {
+              return {
+                word: word.word,
+                lettersTyped: word.lettersTyped.concat(word.lettersLeft.slice(0, 1)),
+                lettersLeft: word.lettersLeft.slice(1)
+              };
+            }
+            return word;
+          })
+        };
+        if (stateUpdate.words[state.currentWordIndex].lettersLeft.length === 0) {
+          stateUpdate.currentWordIndex = 'none';
+          stateUpdate.score = state.score + 1;
+        }
+      }
+      return stateUpdate;
+    });
   }
 
   render() {
     console.log(this.state);
+    console.log(this.state.words.length);
     return (
       <AppWrapper className="wrapper">
         <AppHeader> Hype Type</AppHeader>
@@ -133,9 +180,9 @@ class App extends Component {
         <AppContent>
           {/* Game Content */}
           {
-            this.state.words ? (
+            this.state.words.length > 0 ? (
               this.state.words.map((word, i) => (
-                <Word word={word.join('')} key={i} />
+                <Word word={word} key={i} />
               ))
             ) : (
               null
