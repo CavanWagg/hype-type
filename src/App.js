@@ -3,7 +3,6 @@ import './App.css';
 import Word from './components/Words/Word';
 import styled from 'styled-components';
 import { createGlobalStyle } from 'styled-components';
-import TypeSwitch from 'type-switch';
 
 //* Styles
 
@@ -72,8 +71,9 @@ const AppSidebar = styled.aside`
     /* width: 19.1489%; */
   }
 `;
+
 //* -------------------------------------------------------------------------
-// const renderedWord = document.querySelector('#rendered-word');
+
 const words = ['ward', 'shout', 'debut', 'rehearsal', 'charge', 'realize'];
 
 class App extends Component {
@@ -85,11 +85,9 @@ class App extends Component {
       words: [],
       currentWordIndex: 'none'
     };
-    this.init = this.init.bind(this);
-    // this.createWord = this.createWord.bind(this);
     this.setWords = this.setWords.bind(this);
     this.trackKeysInWords = this.trackKeysInWords.bind(this);
-    this.TypeSwitch = new TypeSwitch({ stubbornMode: true });
+    this.init = this.init.bind(this);
   }
 
   setWords(words) {
@@ -99,31 +97,9 @@ class App extends Component {
       lettersLeft: word.split('')
     }));
   }
-
-  init() {
-    this.setState({ isPlaying: true, words: this.setWords(words) });
-    this.TypeSwitch.start('eventually');
-    // this.showWord(words);
-    // console.log(renderedWord);
-    // console.log(TypeSwitch);
-    window.addEventListener('keypress', this.trackKeysInWords);
-  }
   
-  // createWord = array => {
-  //   const randIndex = Math.floor(Math.random() * words.length);
-  //   return array[randIndex].split('').map((letter, index) => {
-  //     var letterElement = (
-  //       <p className="letter" key={index}>
-  //         {letter}
-  //       </p>
-  //     );
-  //     return letterElement;
-  //   });
-  // };
-  // handle key input
   trackKeysInWords(e) {
     this.setState(state => {
-      console.log(state);
       let stateUpdate;
       if (state.currentWordIndex === 'none') {
         for (let i = 0; i < state.words.length; i++) {
@@ -166,9 +142,12 @@ class App extends Component {
     });
   }
 
+  init() {
+    this.setState({ isPlaying: true, words: this.setWords(words) });
+    window.addEventListener('keypress', this.trackKeysInWords);
+  }
+
   render() {
-    console.log(this.state);
-    console.log(this.state.words.length);
     return (
       <AppWrapper className="wrapper">
         <AppHeader> Hype Type</AppHeader>
@@ -178,7 +157,6 @@ class App extends Component {
           <button onClick={this.init}>Start</button>
         </AppSidebar>
         <AppContent>
-          {/* Game Content */}
           {
             this.state.words.length > 0 ? (
               this.state.words.map((word, i) => (
@@ -188,10 +166,7 @@ class App extends Component {
               null
             )
           }
-          {/*<h2>{this.state.words}</h2> */}
         </AppContent>
-
-        {/* <footer className="footer">My footer</footer> */}
         <GlobalStyle />
       </AppWrapper>
     );

@@ -10,7 +10,7 @@ export default class Word extends Component {
   render() {
     return (
       <p>
-        {this.props.word.lettersTyped.map(letter => <span className="typed">{letter}</span>)}
+        <span className="typed">{this.props.word.lettersTyped.join('')}</span>
         {this.props.word.lettersLeft.join('')}
       </p>
     );
