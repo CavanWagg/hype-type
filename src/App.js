@@ -94,7 +94,8 @@ class App extends Component {
         longestStreak: 0,
         accuracy: 100
       },
-      fallingWords: []
+      fallingWords: [],
+      isPlaying: false
     };
     this.letters = 'abcdefghijklmnopqrstuvwxyz';
     this.currentEnemyIndex = null;
@@ -153,17 +154,19 @@ class App extends Component {
     });
   }
 
-  queueNextWave() {
-    if (!this.waveCount) {
+  queueNextWave(firstRound = false) {
+    if (this.waveCount === 0) {
       this.TypeSwitch.broadcast('gamestart');
-      this.setState({
+      const stateUpdate = {
         stats: {
           score: 0,
           currentStreak: 0,
           longestStreak: 0,
           accuracy: 100
         }
-      });
+      };
+      if (firstRound) stateUpdate.isPlaying = true;
+      this.setState(stateUpdate);
     }
     this.waveCount++;
     setTimeout(() => {
@@ -219,12 +222,10 @@ class App extends Component {
   }
 
   findWord(e) {
-    var pressedCharCode = typeof e.which === 'number' ? e.which : e.keycode;
-    var pressedKeyChar = String.fromCharCode(pressedCharCode);
-    var wordFound = false;
+    const pressedCharCode = typeof e.which === 'number' ? e.which : e.keycode;
+    const pressedKeyChar = String.fromCharCode(pressedCharCode);
     this.state.fallingWords.forEach((target, index) => {
       if (target.word.charAt(0) === pressedKeyChar) {
-        wordFound = true;
         this.currentEnemyIndex = index;
         this.currentEnemy = target;
         this.TypeSwitch.changeCurrentIndex(1);
@@ -265,16 +266,11 @@ class App extends Component {
   }
 
   handleClick() {
-    var button = document.getElementById('start');
-    button.addEventListener('click', hideshow, false);
-    function hideshow() {
-      this.style.display = 'none';
-    }
-    this.queueNextWave();
+    this.queueNextWave(true);
   }
 
   render() {
-    var allTheWords = this.state.fallingWords.map(word => {
+    const allTheWords = this.state.fallingWords.map(word => {
       return word.component;
     });
     return (
@@ -283,9 +279,13 @@ class App extends Component {
         <AppSidebar>
           {' '}
           Score {this.state.score}
-          <button id="start" onClick={this.handleClick}>
-            Start
-          </button>
+          {this.state.isPlaying ? (
+            null
+          ) : (
+            <button onClick={this.handleClick}>
+              Start
+            </button>
+          )}
         </AppSidebar>
         <AppContent>
           Game Content
