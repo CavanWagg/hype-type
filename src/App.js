@@ -94,47 +94,49 @@ class App extends Component {
         longestStreak: 0,
         accuracy: 100
       },
-      fallingWords: []
+      fallingWords: [],
+      isPlaying: false,
+      totalKeystrokes: 0,
+      totalMistakes: 0,
+      waveCount: 0,
+      letters: 'abcdefghijklmnopqrstuvwxyz',
+      currentEnemyIndex: null,
+      currentEnemy: null
     };
-    this.letters = 'abcdefghijklmnopqrstuvwxyz';
-    this.currentEnemyIndex = null;
-    this.currentEnemy = null;
-    this.waveCount = 0;
     this.queueNextWave = this.queueNextWave.bind(this);
     this.findWord = this.findWord.bind(this);
     this.handleClick = this.handleClick.bind(this);
     this.reduceLetters = this.reduceLetters.bind(this);
     this.TypeSwitch = new TypeSwitch({ stubbornMode: true });
     this.TypeSwitch.on('incorrect', () => {
-      this.totalKeystrokes++;
-      this.totalMistakes++;
-      this.updateStats(
-        'accuracy',
-        (1 - this.totalMistakes / this.totalKeystrokes) * 100
-      );
-      this.updateStats(
-        'score',
-        this.state.stats.score > 0 ? this.state.stats.score - 25 : 0
-      );
-      this.updateStats('currentStreak', 0);
+      this.setState(state => ({
+        stats: {
+          longestStreak: state.stats.longestStreak,
+          accuracy: (1 - state.totalMistakes / state.totalKeystrokes) * 100,
+          score: state.stats.score > 0 ? state.stats.score - 25 : 0,
+          currentStreak: 0
+        },
+        totalKeystrokes: state.totalKeystrokes + 1,
+        totalMistakes: state.totalMistakes + 1
+      }));
     });
     this.TypeSwitch.on('correct', () => {
-      this.totalKeystrokes++;
-      this.updateStats(
-        'accuracy',
-        (1 - this.totalMistakes / this.totalKeystrokes) * 100
-      );
-      this.updateStats('currentStreak', this.state.stats.currentStreak + 1);
-      this.updateStats(
-        'longestStreak',
-        this.state.stats.currentStreak > this.state.stats.longestStreak
-          ? this.state.stats.currentStreak
-          : this.state.stats.longestStreak
-      );
-
+      this.setState(state => ({
+        stats: {
+          score: state.stats.score,
+          accuracy: (1 - state.totalMistakes / state.totalKeystrokes) * 100,
+          currentStreak: state.stats.currentStreak + 1,
+          longestStreak: state.stats.currentStreak > state.stats.longestStreak ? (
+            state.stats.currentStreak
+          ) : (
+            state.stats.longestStreak
+          )
+        },
+        totalKeystrokes: state.totalKeystrokes + 1
+      }));
       this.TypeSwitch.broadcast('targetAcquired');
       helpers.changeLetterColor(
-        this.currentEnemy.wordIdentifier,
+        this.state.currentEnemy.wordIdentifier,
         this.TypeSwitch.getGameStats().currentIndex
       );
     });
@@ -153,8 +155,8 @@ class App extends Component {
     });
   }
 
-  queueNextWave() {
-    if (!this.waveCount) {
+  queueNextWave(firstRound = false) {
+    if (firstRound) {
       this.TypeSwitch.broadcast('gamestart');
       this.setState({
         stats: {
@@ -162,35 +164,36 @@ class App extends Component {
           currentStreak: 0,
           longestStreak: 0,
           accuracy: 100
-        }
+        },
+        isPlaying: true
       });
     }
-    this.waveCount++;
     setTimeout(() => {
-      this.setState({
+      this.setState(state => ({
         fallingWords: [],
-        waveLaunching: true
-      });
+        waveLaunching: true,
+        waveCount: state.waveCount + 1
+      }));
       this.launchWave();
     }, 1000);
   }
 
   launchWave() {
     document.addEventListener('keypress', this.findWord, false);
-    var waveData = waves(this.waveCount);
-    var newWave = waveData.map((enemy, index) => {
-      var typeWord = {};
+    const waveData = waves(this.state.waveCount);
+    const newWave = waveData.map((enemy, index) => {
+      const typeWord = {};
       typeWord.componentIdentifier = '[data-enemy="' + index + '"]';
       typeWord.wordIdentifier = '[data-word="' + index + '"]';
       typeWord.containerIdentifier = '[data-container="' + index + '"]';
       typeWord.isDead = false;
-      var wordString = this.reduceLetters(wordBank.word);
+      const wordString = this.reduceLetters(wordBank.word);
       // the word is a string
       typeWord.word = wordString;
       typeWord.letterArray = helpers.createWord(typeWord.word);
       typeWord.component = (
         <Word
-          key={this.waveCount.toString() + index}
+          key={this.state.waveCount.toString() + index}
           enemyIndex={index}
           letterArray={typeWord.letterArray}
           reduceLetters={this.reduceLetters}
@@ -204,77 +207,71 @@ class App extends Component {
 
   reduceLetters(wordBank) {
     // random letter
-    var availableCharacter = this.letters[
-      Math.floor(Math.random() * this.letters.length)
+    const availableCharacter = this.state.letters[
+      Math.floor(Math.random() * this.state.letters.length)
     ];
     // returns an array of all the words in the wordbank that start with the availableCharacter.
     var availableWordArray = wordBank.filter(word => {
-      return word.charAt(0) === availableCharacter ? true : false;
+      return word.charAt(0) === availableCharacter;
     });
     // returns a random word(string) that is from the availableWordArray.
-    var newWord =
-      availableWordArray[Math.floor(Math.random() * availableWordArray.length)];
-    this.letters = this.letters.replace(newWord.charAt(0), '');
+    var newWord = availableWordArray[Math.floor(Math.random() * availableWordArray.length)];
+    this.setState(state => ({
+      letters: state.letters.replace(newWord.charAt(0), '')
+    }));
     return newWord;
   }
 
   findWord(e) {
-    var pressedCharCode = typeof e.which === 'number' ? e.which : e.keycode;
-    var pressedKeyChar = String.fromCharCode(pressedCharCode);
-    var wordFound = false;
+    const pressedCharCode = typeof e.which === 'number' ? e.which : e.keycode;
+    const pressedKeyChar = String.fromCharCode(pressedCharCode);
     this.state.fallingWords.forEach((target, index) => {
       if (target.word.charAt(0) === pressedKeyChar) {
-        wordFound = true;
-        this.currentEnemyIndex = index;
-        this.currentEnemy = target;
+        this.setState({
+          currentEnemyIndex: index,
+          currentEnemy: target
+        });
         this.TypeSwitch.changeCurrentIndex(1);
         this.TypeSwitch.start(target.word);
         this.TypeSwitch.broadcast('targetAcquired');
-        helpers.changeLetterColor(this.currentEnemy.wordIdentifier, 1);
+        helpers.changeLetterColor(target.wordIdentifier, 1);
         document.removeEventListener('keypress', this.findWord);
       }
     });
   }
 
-  updateStats(key, value) {
-    var adjustedStats = this.state.stats;
-    adjustedStats[key] = value;
-    this.setState({
-      stats: adjustedStats
-    });
-  }
-
   removeWord() {
-    this.letters = this.letters + this.currentEnemy.word.charAt(0);
+    this.setState(state => ({
+      letters: state.letters + this.state.currentEnemy.word.charAt(0)
+    }));
     helpers.changeLetterColor(
-      this.currentEnemy.wordIdentifier,
+      this.state.currentEnemy.wordIdentifier,
       this.TypeSwitch.getGameStats().currentIndex
     );
 
-    var adjustedWordArray = this.state.fallingWords;
-    var adjustedWord = adjustedWordArray[this.currentEnemyIndex];
+    const adjustedWordArray = this.state.fallingWords;
+    const adjustedWord = adjustedWordArray[this.state.currentEnemyIndex];
     adjustedWord.isDead = true;
-    this.updateStats('score', this.state.stats.score + 200);
-    this.setState({
-      fallingWords: adjustedWordArray
-    });
-
-    this.currentEnemy = null;
-    this.currentEnemyIndex = null;
+    this.setState(state => ({
+      stats: {
+        score: state.stats.score + 200,
+        accuracy: state.stats.accuracy,
+        currentStreak: state.stats.currentStreak,
+        longestStreak: state.stats.longestStreak
+      },
+      fallingWords: adjustedWordArray,
+      currentEnemy: null,
+      currentEnemyIndex: null
+    }));
     this.TypeSwitch.resetGame();
   }
 
   handleClick() {
-    var button = document.getElementById('start');
-    button.addEventListener('click', hideshow, false);
-    function hideshow() {
-      this.style.display = 'none';
-    }
-    this.queueNextWave();
+    this.queueNextWave(true);
   }
 
   render() {
-    var allTheWords = this.state.fallingWords.map(word => {
+    const allTheWords = this.state.fallingWords.map(word => {
       return word.component;
     });
     return (
@@ -282,10 +279,14 @@ class App extends Component {
         <AppHeader> Hype Type</AppHeader>
         <AppSidebar>
           {' '}
-          Score {this.state.score}
-          <button id="start" onClick={this.handleClick}>
-            Start
-          </button>
+          Score {this.state.stats.score}
+          {this.state.isPlaying ? (
+            null
+          ) : (
+            <button onClick={this.handleClick}>
+              Start
+            </button>
+          )}
         </AppSidebar>
         <AppContent>
           Game Content
