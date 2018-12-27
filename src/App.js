@@ -104,7 +104,6 @@ class App extends Component {
       currentEnemy: null
     };
     this.queueNextWave = this.queueNextWave.bind(this);
-    this.updateStats = this.updateStats.bind(this);
     this.findWord = this.findWord.bind(this);
     this.handleClick = this.handleClick.bind(this);
     this.reduceLetters = this.reduceLetters.bind(this);
@@ -112,23 +111,29 @@ class App extends Component {
     this.TypeSwitch.on('incorrect', () => {
       // this.state.totalKeystrokes++;
       // this.state.totalMistakes++;
-      this.updateStats({
-        accuracy: (1 - this.state.totalMistakes / this.state.totalKeystrokes) * 100,
-        score: this.state.stats.score > 0 ? this.state.stats.score - 25 : 0,
-        currentStreak: 0
-      });
+      this.setState(state => ({
+        stats: {
+          longestStreak: state.stats.longestStreak,
+          accuracy: (1 - state.totalMistakes / state.totalKeystrokes) * 100,
+          score: state.stats.score > 0 ? state.stats.score - 25 : 0,
+          currentStreak: 0
+        }
+      }));
     });
     this.TypeSwitch.on('correct', () => {
       // this.state.totalKeystrokes++;
-      this.updateStats({
-        accuracy: (1 - this.state.totalMistakes / this.state.totalKeystrokes) * 100,
-        currentStreak: this.state.stats.currentStreak + 1,
-        longestStreak: this.state.stats.currentStreak > this.state.stats.longestStreak ? (
-          this.state.stats.currentStreak
-        ) : (
-          this.state.stats.longestStreak
-        )
-      });
+      this.setState(state => ({
+        stats: {
+          score: state.stats.score,
+          accuracy: (1 - state.totalMistakes / state.totalKeystrokes) * 100,
+          currentStreak: state.stats.currentStreak + 1,
+          longestStreak: state.stats.currentStreak > state.stats.longestStreak ? (
+            state.stats.currentStreak
+          ) : (
+            state.stats.longestStreak
+          )
+        }
+      }));
       this.TypeSwitch.broadcast('targetAcquired');
       helpers.changeLetterColor(
         this.currentEnemy.wordIdentifier,
@@ -235,13 +240,6 @@ class App extends Component {
     });
   }
 
-  updateStats(newStats) {
-    console.log(newStats);
-    this.setState({
-      stats: newStats
-    });
-  }
-
   removeWord() {
     this.setState(state => ({
       letters: state.letters + this.currentEnemy.word.charAt(0)
@@ -254,14 +252,17 @@ class App extends Component {
     const adjustedWordArray = this.state.fallingWords;
     const adjustedWord = adjustedWordArray[this.state.currentEnemyIndex];
     adjustedWord.isDead = true;
-    this.updateStats({
-      score: this.state.stats.score + 200,
-      fallingWords: adjustedWordArray
-    });
-    this.setState({
+    this.setState(state => ({
+      stats: {
+        score: state.stats.score + 200,
+        accuracy: state.stats.accuracy,
+        currentStreak: state.stats.currentStreak,
+        longestStreak: state.stats.longestStreak
+      },
+      fallingWords: adjustedWordArray,
       currentEnemy: null,
       currentEnemyIndex: null
-    });
+    }));
     this.TypeSwitch.resetGame();
   }
 
