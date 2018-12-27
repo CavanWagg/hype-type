@@ -109,19 +109,18 @@ class App extends Component {
     this.reduceLetters = this.reduceLetters.bind(this);
     this.TypeSwitch = new TypeSwitch({ stubbornMode: true });
     this.TypeSwitch.on('incorrect', () => {
-      // this.state.totalKeystrokes++;
-      // this.state.totalMistakes++;
       this.setState(state => ({
         stats: {
           longestStreak: state.stats.longestStreak,
           accuracy: (1 - state.totalMistakes / state.totalKeystrokes) * 100,
           score: state.stats.score > 0 ? state.stats.score - 25 : 0,
           currentStreak: 0
-        }
+        },
+        totalKeystrokes: state.totalKeystrokes + 1,
+        totalMistakes: state.totalMistakes + 1
       }));
     });
     this.TypeSwitch.on('correct', () => {
-      // this.state.totalKeystrokes++;
       this.setState(state => ({
         stats: {
           score: state.stats.score,
@@ -132,11 +131,12 @@ class App extends Component {
           ) : (
             state.stats.longestStreak
           )
-        }
+        },
+        totalKeystrokes: state.totalKeystrokes + 1
       }));
       this.TypeSwitch.broadcast('targetAcquired');
       helpers.changeLetterColor(
-        this.currentEnemy.wordIdentifier,
+        this.state.currentEnemy.wordIdentifier,
         this.TypeSwitch.getGameStats().currentIndex
       );
     });
@@ -242,10 +242,10 @@ class App extends Component {
 
   removeWord() {
     this.setState(state => ({
-      letters: state.letters + this.currentEnemy.word.charAt(0)
+      letters: state.letters + this.state.currentEnemy.word.charAt(0)
     }));
     helpers.changeLetterColor(
-      this.currentEnemy.wordIdentifier,
+      this.state.currentEnemy.wordIdentifier,
       this.TypeSwitch.getGameStats().currentIndex
     );
 
