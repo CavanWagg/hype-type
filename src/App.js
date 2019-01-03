@@ -107,6 +107,8 @@ class App extends Component {
     this.findWord = this.findWord.bind(this);
     this.handleClick = this.handleClick.bind(this);
     this.reduceLetters = this.reduceLetters.bind(this);
+    this.removeWord = this.removeWord.bind(this);
+    this.textToSpeech = this.textToSpeech.bind(this);
     this.TypeSwitch = new TypeSwitch({ stubbornMode: true });
     this.TypeSwitch.on('incorrect', () => {
       this.setState(state => ({
@@ -126,11 +128,10 @@ class App extends Component {
           score: state.stats.score,
           accuracy: (1 - state.totalMistakes / state.totalKeystrokes) * 100,
           currentStreak: state.stats.currentStreak + 1,
-          longestStreak: state.stats.currentStreak > state.stats.longestStreak ? (
-            state.stats.currentStreak
-          ) : (
-            state.stats.longestStreak
-          )
+          longestStreak:
+            state.stats.currentStreak > state.stats.longestStreak
+              ? state.stats.currentStreak
+              : state.stats.longestStreak
         },
         totalKeystrokes: state.totalKeystrokes + 1
       }));
@@ -141,6 +142,8 @@ class App extends Component {
       );
     });
     this.TypeSwitch.on('complete', () => {
+      console.log(this.state.currentEnemy.word);
+      this.textToSpeech();
       this.removeWord();
       var remainingEnemies = this.state.fallingWords.filter(enemy => {
         return !enemy.isDead;
@@ -215,7 +218,8 @@ class App extends Component {
       return word.charAt(0) === availableCharacter;
     });
     // returns a random word(string) that is from the availableWordArray.
-    var newWord = availableWordArray[Math.floor(Math.random() * availableWordArray.length)];
+    var newWord =
+      availableWordArray[Math.floor(Math.random() * availableWordArray.length)];
     this.setState(state => ({
       letters: state.letters.replace(newWord.charAt(0), '')
     }));
@@ -239,7 +243,12 @@ class App extends Component {
       }
     });
   }
-
+  textToSpeech() {
+    this.speaker = new SpeechSynthesisUtterance();
+    this.speaker.lang = 'en-US';
+    this.speaker.text = this.state.currentEnemy.word;
+    speechSynthesis.speak(this.speaker);
+  }
   removeWord() {
     this.setState(state => ({
       letters: state.letters + this.state.currentEnemy.word.charAt(0)
@@ -280,12 +289,8 @@ class App extends Component {
         <AppSidebar>
           {' '}
           Score {this.state.stats.score}
-          {this.state.isPlaying ? (
-            null
-          ) : (
-            <button onClick={this.handleClick}>
-              Start
-            </button>
+          {this.state.isPlaying ? null : (
+            <button onClick={this.handleClick}>Start</button>
           )}
         </AppSidebar>
         <AppContent>
