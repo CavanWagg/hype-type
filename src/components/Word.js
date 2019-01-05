@@ -17,6 +17,7 @@ export default class Word extends Component {
       const cb = () => {
         position += distanceEachFrame;
         box.style.top = `${position}px`;
+        box.style.left = `${100 * Math.sin(position / 50)}px`;
         if ((position < (appContent.clientHeight - box.clientHeight - 20)) && !this.props.isDead) {
           requestAnimationFrame(cb);
         } else {

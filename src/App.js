@@ -25,8 +25,7 @@ const GlobalStyle = createGlobalStyle`
   margin: 0 0 1em 0;
   }
   .wordContainer {
-    display: inline-block;
-    margin: 0 10px;
+    position: relative;
   }
   .word {
     position: relative;
@@ -52,6 +51,10 @@ const GlobalStyle = createGlobalStyle`
     font-size: 150%;
     /* needed for the floated layout*/
     margin-bottom: 10px;
+  }
+  #word-space {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
   }
   `;
 
@@ -301,7 +304,7 @@ class App extends Component {
           )}
         </AppSidebar>
         <AppContent id="app-content">
-          <div className="word-space">{allTheWords}</div>
+          <div id="word-space">{allTheWords}</div>
         </AppContent>
         <GlobalStyle />
       </AppWrapper>
