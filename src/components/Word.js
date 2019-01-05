@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 export default class Word extends Component {
   
   componentDidMount() {
+    const appContent = document.getElementById("app-content");
     const box = document.getElementById(`box${this.props.id}`);
     const rNum = Math.random();
     const distanceEachFrame = rNum < 0.2 ? (
@@ -16,9 +17,13 @@ export default class Word extends Component {
       const cb = function() {
         position += distanceEachFrame;
         box.style.top = `${position}px`;
+        if (position < (appContent.clientHeight - box.clientHeight - 20)) {
+          requestAnimationFrame(cb);
+        }
+      }
+      if (position < (appContent.clientHeight - box.clientHeight - 20)) {
         requestAnimationFrame(cb);
       }
-      requestAnimationFrame(cb);
     });
   }
   

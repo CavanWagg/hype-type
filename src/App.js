@@ -301,8 +301,7 @@ class App extends Component {
             <button onClick={this.handleClick}>Start</button>
           )}
         </AppSidebar>
-        <AppContent>
-          Game Content
+        <AppContent id="app-content">
           <div className="word-space">{allTheWords}</div>
         </AppContent>
         <GlobalStyle />
