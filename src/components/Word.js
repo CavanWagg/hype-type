@@ -12,17 +12,21 @@ export default class Word extends Component {
     ) : (
       rNum > 0.8 ? 0.8 : rNum
     );
-    requestAnimationFrame(function() {
+    requestAnimationFrame(() => {
       let position = 0;
-      const cb = function() {
+      const cb = () => {
         position += distanceEachFrame;
         box.style.top = `${position}px`;
-        if (position < (appContent.clientHeight - box.clientHeight - 20)) {
+        if ((position < (appContent.clientHeight - box.clientHeight - 20)) && !this.props.isDead) {
           requestAnimationFrame(cb);
+        } else {
+          console.log("dead");
         }
       }
-      if (position < (appContent.clientHeight - box.clientHeight - 20)) {
+      if ((position < (appContent.clientHeight - box.clientHeight - 20)) && !this.props.isDead) {
         requestAnimationFrame(cb);
+      } else {
+        console.log("dead");
       }
     });
   }
@@ -30,10 +34,14 @@ export default class Word extends Component {
   render() {
     return (
       <div className="wordContainer" data-container={this.props.enemyIndex}>
-        <div id={`box${this.props.id}`} className="word" data-word={this.props.enemyIndex}>
-          {this.props.letterArray}
-          <i data-enemy={this.props.enemyIndex} />
-        </div>
+        {this.props.isDead ? (
+          null
+        ) : (
+          <div id={`box${this.props.id}`} className="word" data-word={this.props.enemyIndex}>
+            {this.props.letterArray}
+            <i data-enemy={this.props.enemyIndex} />
+          </div>
+        )}
       </div>
     );
   }

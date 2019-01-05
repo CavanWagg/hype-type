@@ -27,7 +27,6 @@ const GlobalStyle = createGlobalStyle`
   .wordContainer {
     display: inline-block;
     margin: 0 10px;
-    position: relative;
   }
   .word {
     position: relative;
@@ -201,16 +200,6 @@ class App extends Component {
       // the word is a string
       typeWord.word = wordString;
       typeWord.letterArray = helpers.createWord(typeWord.word);
-      typeWord.component = (
-        <Word
-          key={this.state.waveCount.toString() + index}
-          id={this.state.waveCount.toString() + index}
-          enemyIndex={index}
-          letterArray={typeWord.letterArray}
-          reduceLetters={this.reduceLetters}
-          containerIdentifier={typeWord.containerIdentifier}
-        />
-      );
       return typeWord;
     });
     this.setState({ fallingWords: newWave });
@@ -288,8 +277,18 @@ class App extends Component {
   }
 
   render() {
-    const allTheWords = this.state.fallingWords.map(word => {
-      return word.component;
+    const allTheWords = this.state.fallingWords.map((word, index) => {
+      return (
+        <Word
+          key={this.state.waveCount.toString() + index}
+          id={this.state.waveCount.toString() + index}
+          isDead={word.isDead}
+          enemyIndex={index}
+          letterArray={word.letterArray}
+          reduceLetters={this.reduceLetters}
+          containerIdentifier={word.containerIdentifier}
+        />
+      );
     });
     return (
       <AppWrapper className="wrapper">
