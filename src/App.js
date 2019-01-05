@@ -24,7 +24,14 @@ const GlobalStyle = createGlobalStyle`
   p {
   margin: 0 0 1em 0;
   }
-  .word{
+  .wordContainer {
+    display: inline-block;
+    margin: 0 10px;
+    position: relative;
+  }
+  .word {
+    position: relative;
+    top: 0px;
     display: flex;
   }
   .letter {
@@ -197,6 +204,7 @@ class App extends Component {
       typeWord.component = (
         <Word
           key={this.state.waveCount.toString() + index}
+          id={this.state.waveCount.toString() + index}
           enemyIndex={index}
           letterArray={typeWord.letterArray}
           reduceLetters={this.reduceLetters}
@@ -293,8 +301,7 @@ class App extends Component {
             <button onClick={this.handleClick}>Start</button>
           )}
         </AppSidebar>
-        <AppContent>
-          Game Content
+        <AppContent id="app-content">
           <div className="word-space">{allTheWords}</div>
         </AppContent>
         <GlobalStyle />

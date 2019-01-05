@@ -2,10 +2,35 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 export default class Word extends Component {
+  
+  componentDidMount() {
+    const appContent = document.getElementById("app-content");
+    const box = document.getElementById(`box${this.props.id}`);
+    const rNum = Math.random();
+    const distanceEachFrame = rNum < 0.2 ? (
+      0.2
+    ) : (
+      rNum > 0.8 ? 0.8 : rNum
+    );
+    requestAnimationFrame(function() {
+      let position = 0;
+      const cb = function() {
+        position += distanceEachFrame;
+        box.style.top = `${position}px`;
+        if (position < (appContent.clientHeight - box.clientHeight - 20)) {
+          requestAnimationFrame(cb);
+        }
+      }
+      if (position < (appContent.clientHeight - box.clientHeight - 20)) {
+        requestAnimationFrame(cb);
+      }
+    });
+  }
+  
   render() {
     return (
       <div className="wordContainer" data-container={this.props.enemyIndex}>
-        <div className="word" data-word={this.props.enemyIndex}>
+        <div id={`box${this.props.id}`} className="word" data-word={this.props.enemyIndex}>
           {this.props.letterArray}
           <i data-enemy={this.props.enemyIndex} />
         </div>
