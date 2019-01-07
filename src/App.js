@@ -22,7 +22,8 @@ const GlobalStyle = createGlobalStyle`
   }
   h1,
   p {
-  margin: 0 0 1em 0;
+  margin: 0;
+  height: 30px;
   }
   .wordContainer {
     justify-self: center;
@@ -56,6 +57,7 @@ const GlobalStyle = createGlobalStyle`
   #word-space {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-rows: 30px 30px 30px;
   }
   `;
 
@@ -185,7 +187,7 @@ class App extends Component {
       this.setState(state => ({
         fallingWords: [],
         waveLaunching: true,
-        waveCount: state.waveCount + 1
+        waveCount: state.waveCount < 12 ? state.waveCount + 1 : state.waveCount
       }));
       this.launchWave();
     }, 1000);
@@ -286,6 +288,7 @@ class App extends Component {
         <Word
           key={this.state.waveCount.toString() + index}
           id={this.state.waveCount.toString() + index}
+          row={index < 4 ? 1 : index < 8 ? 2 : 3}
           isDead={word.isDead}
           enemyIndex={index}
           letterArray={word.letterArray}
