@@ -2,11 +2,11 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 export default class Word extends Component {
-  
   componentDidMount() {
-    const appContent = document.getElementById("app-content");
+    const appContent = document.getElementById('app-content');
     const box = document.getElementById(`box${this.props.id}`);
     const rNum = Math.random();
+
     const distanceEachFrame = rNum < 0.2 ? (
       0.2
     ) : (
@@ -35,29 +35,33 @@ export default class Word extends Component {
               requestAnimationFrame(animate);
             } 
           } else {
-            console.log("dead");
+            // this.checkForGameOver();
           }
-      }
+        }
         if (!this.props.isDead) {
           if (positionX < (appContent.clientHeight - box.clientHeight - 20 + topPositionAdjustment)) {
             requestAnimationFrame(animate);
           } 
         } else {
-          console.log("dead");
+          // this.checkForGameOver();
         }
     });
   }
-  
+
   render() {
     const style = {
+      position: "relative",
       top: this.props.row < 2 ? 0 : this.props.row < 3 ? -30 : -60
     };
     return (
       <div id={`container${this.props.id}`} className="wordContainer" data-container={this.props.enemyIndex}>
-        {this.props.isDead ? (
-          null
-        ) : (
-          <div id={`box${this.props.id}`} className="word" style={style} data-word={this.props.enemyIndex}>
+        {this.props.isDead ? null : (
+          <div
+            id={`box${this.props.id}`}
+            className="word"
+            style={style}
+            data-word={this.props.enemyIndex}
+          >
             {this.props.letterArray}
             <i data-enemy={this.props.enemyIndex} />
           </div>
