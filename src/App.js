@@ -23,15 +23,14 @@ const GlobalStyle = createGlobalStyle`
   }
   h1,
   p {
-  margin: 0 0 1em 0;
+  margin: 0;
+  height: 30px;
   }
   .wordContainer {
     justify-self: center;
     position: relative;
   }
   .word {
-    position: relative;
-    top: 0px;
     display: flex;
   }
   .letter {
@@ -57,6 +56,7 @@ const GlobalStyle = createGlobalStyle`
   #word-space {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-rows: 30px 30px 30px;
   }
   #messageContainer {
     display: flex;
@@ -64,7 +64,7 @@ const GlobalStyle = createGlobalStyle`
     justify-content: center;
     height: 100%;
   }
-  .begin {
+  .message-div {
     text-align: center;
   }
   `;
@@ -104,6 +104,7 @@ class App extends Component {
       currentEnemy: null
     };
     this.messageType = 'startGame';
+    this.handleClick = this.handleClick.bind(this);
     this.queueNextWave = this.queueNextWave.bind(this);
     this.findWord = this.findWord.bind(this);
     this.reduceLetters = this.reduceLetters.bind(this);
@@ -177,7 +178,7 @@ class App extends Component {
       this.setState(state => ({
         fallingWords: [],
         waveLaunching: true,
-        waveCount: state.waveCount + 1
+        waveCount: state.waveCount < 10 ? state.waveCount + 1 : 1
       }));
       this.launchWave();
     }, 1000);
@@ -268,17 +269,19 @@ class App extends Component {
     this.TypeSwitch.resetGame();
   }
 
-  // handleClick() {
-  //   this.queueNextWave(true);
-  // }
+  handleClick() {
+    this.queueNextWave(true);
+  }
 
-  GameOver = () => {
+  gameOver = () => {
+    console.log('you lost man');
     document.removeEventListener('keypress', this.findWord);
     this.messageType = 'gameOver';
     this.TypeSwitch.broadcast('gameOver');
     this.setState({
       fallingWords: [],
-      waveLaunching: false
+      waveLaunching: false,
+      waveCount: 0
     });
     this.totalMistakes = 0;
     this.totalKeystrokes = 0;
@@ -297,10 +300,12 @@ class App extends Component {
         <Word
           key={this.state.waveCount.toString() + index}
           id={this.state.waveCount.toString() + index}
+          row={index < 4 ? 1 : index < 8 ? 2 : 3}
           isDead={word.isDead}
           enemyIndex={index}
           letterArray={word.letterArray}
           reduceLetters={this.reduceLetters}
+          gameOver={this.gameOver}
           containerIdentifier={word.containerIdentifier}
         />
       );

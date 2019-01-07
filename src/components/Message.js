@@ -16,7 +16,7 @@ export default class Message extends Component {
     switch (this.props.messageType) {
       case 'startGame':
         message = (
-          <div class="begin">
+          <div className="message-div">
             <h1>Hype-Type</h1>
             <button
               onClick={() => {
@@ -29,7 +29,18 @@ export default class Message extends Component {
         );
         break;
       case 'gameOver':
-        message = <h1>Game Over</h1>;
+        message = (
+          <div className="message-div">
+            <h1>Game Over</h1>
+            <button
+              onClick={() => {
+                this.handleClick();
+              }}
+            >
+              Play Again
+            </button>
+          </div>
+        );
         break;
       case 'playingGame':
         message = null;
