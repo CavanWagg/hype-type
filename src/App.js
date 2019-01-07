@@ -64,7 +64,7 @@ const GlobalStyle = createGlobalStyle`
     justify-content: center;
     height: 100%;
   }
-  .begin {
+  .message-div {
     text-align: center;
   }
   `;
@@ -273,13 +273,15 @@ class App extends Component {
     this.queueNextWave(true);
   }
 
-  GameOver = () => {
+  gameOver = () => {
+    console.log('you lost man');
     document.removeEventListener('keypress', this.findWord);
     this.messageType = 'gameOver';
     this.TypeSwitch.broadcast('gameOver');
     this.setState({
       fallingWords: [],
-      waveLaunching: false
+      waveLaunching: false,
+      waveCount: 0
     });
     this.totalMistakes = 0;
     this.totalKeystrokes = 0;
@@ -303,6 +305,7 @@ class App extends Component {
           enemyIndex={index}
           letterArray={word.letterArray}
           reduceLetters={this.reduceLetters}
+          gameOver={this.gameOver}
           containerIdentifier={word.containerIdentifier}
         />
       );

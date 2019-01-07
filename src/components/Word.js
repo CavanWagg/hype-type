@@ -7,22 +7,18 @@ export default class Word extends Component {
     const box = document.getElementById(`box${this.props.id}`);
     const rNum = Math.random();
 
-    const distanceEachFrame = rNum < 0.2 ? (
-      0.2
-    ) : (
-      rNum > 0.9 ? 0.9 : rNum
-    );
-    const moveSideFunc = this.props.id % 2 === 0 ? (
-      function(angle) {
-        return Math.sin(angle);
-      }
-    ) : (
-      function(angle) {
-        return Math.sin(0 - angle);
-      }
-    );
+    const distanceEachFrame = rNum < 0.2 ? 0.2 : rNum > 0.9 ? 0.9 : rNum;
+    const moveSideFunc =
+      this.props.id % 2 === 0
+        ? function(angle) {
+            return Math.sin(angle);
+          }
+        : function(angle) {
+            return Math.sin(0 - angle);
+          };
     requestAnimationFrame(() => {
-      const topPositionAdjustment = this.props.row < 2 ? 0 : this.props.row < 3 ? -30 : -60;
+      const topPositionAdjustment =
+        this.props.row < 2 ? 0 : this.props.row < 3 ? -30 : -60;
       let positionX = topPositionAdjustment;
       let positionY = 0;
       const animate = () => {
@@ -30,31 +26,47 @@ export default class Word extends Component {
         positionY += distanceEachFrame;
         box.style.top = `${positionX}px`;
         box.style.left = `${50 * moveSideFunc(positionY / 50)}px`;
-          if (!this.props.isDead) {
-            if (positionX < (appContent.clientHeight - box.clientHeight - 20 + topPositionAdjustment)) {
-              requestAnimationFrame(animate);
-            } 
-          } else {
-            // this.checkForGameOver();
+        if (!this.props.isDead) {
+          if (
+            positionX <
+            appContent.clientHeight -
+              box.clientHeight -
+              20 +
+              topPositionAdjustment
+          ) {
+            requestAnimationFrame(animate);
           }
         }
-        if (!this.props.isDead) {
-          if (positionX < (appContent.clientHeight - box.clientHeight - 20 + topPositionAdjustment)) {
-            requestAnimationFrame(animate);
-          } 
-        } else {
-          // this.checkForGameOver();
+        if (positionX > 750) {
+          this.props.gameOver();
         }
+      };
+
+      if (!this.props.isDead) {
+        if (
+          positionX <
+          appContent.clientHeight -
+            box.clientHeight -
+            20 +
+            topPositionAdjustment
+        ) {
+          requestAnimationFrame(animate);
+        }
+      }
     });
   }
 
   render() {
     const style = {
-      position: "relative",
+      position: 'relative',
       top: this.props.row < 2 ? 0 : this.props.row < 3 ? -30 : -60
     };
     return (
-      <div id={`container${this.props.id}`} className="wordContainer" data-container={this.props.enemyIndex}>
+      <div
+        id={`container${this.props.id}`}
+        className="wordContainer"
+        data-container={this.props.enemyIndex}
+      >
         {this.props.isDead ? null : (
           <div
             id={`box${this.props.id}`}
