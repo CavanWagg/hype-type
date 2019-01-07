@@ -16,7 +16,7 @@ export default class Message extends Component {
     switch (this.props.messageType) {
       case 'startGame':
         message = (
-          <div class="begin">
+          <div className="begin">
             <h1>Hype-Type</h1>
             <button
               onClick={() => {

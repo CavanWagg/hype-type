@@ -10,7 +10,7 @@ export default class Word extends Component {
     const distanceEachFrame = rNum < 0.2 ? (
       0.2
     ) : (
-      rNum > 0.8 ? 0.8 : rNum
+      rNum > 0.9 ? 0.9 : rNum
     );
     const moveSideFunc = this.props.id % 2 === 0 ? (
       function(angle) {
@@ -22,32 +22,44 @@ export default class Word extends Component {
       }
     );
     requestAnimationFrame(() => {
-      let position = 0;
+      const topPositionAdjustment = this.props.row < 2 ? 0 : this.props.row < 3 ? -30 : -60;
+      let positionX = topPositionAdjustment;
+      let positionY = 0;
       const animate = () => {
-        position += distanceEachFrame;
-        box.style.top = `${position}px`;
-        box.style.left = `${50 * moveSideFunc(position / 50)}px`;
-        if ((position < (appContent.clientHeight - box.clientHeight - 20)) && !this.props.isDead) {
-          requestAnimationFrame(animate);
-        } else {
-          console.log('dead');
+        positionX += distanceEachFrame;
+        positionY += distanceEachFrame;
+        box.style.top = `${positionX}px`;
+        box.style.left = `${50 * moveSideFunc(positionY / 50)}px`;
+          if (!this.props.isDead) {
+            if (positionX < (appContent.clientHeight - box.clientHeight - 20 + topPositionAdjustment)) {
+              requestAnimationFrame(animate);
+            } 
+          } else {
+            // this.checkForGameOver();
+          }
         }
-      }
-      if ((position < (appContent.clientHeight - box.clientHeight - 20)) && !this.props.isDead) {
-        requestAnimationFrame(animate);
-      } else {
-        this.checkForGameOver();
-      }
+        if (!this.props.isDead) {
+          if (positionX < (appContent.clientHeight - box.clientHeight - 20 + topPositionAdjustment)) {
+            requestAnimationFrame(animate);
+          } 
+        } else {
+          // this.checkForGameOver();
+        }
     });
   }
 
   render() {
+    const style = {
+      position: "relative",
+      top: this.props.row < 2 ? 0 : this.props.row < 3 ? -30 : -60
+    };
     return (
-      <div className="wordContainer" data-container={this.props.enemyIndex}>
+      <div id={`container${this.props.id}`} className="wordContainer" data-container={this.props.enemyIndex}>
         {this.props.isDead ? null : (
           <div
             id={`box${this.props.id}`}
             className="word"
+            style={style}
             data-word={this.props.enemyIndex}
           >
             {this.props.letterArray}
