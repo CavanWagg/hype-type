@@ -26,6 +26,7 @@ const GlobalStyle = createGlobalStyle`
   margin: 0 0 1em 0;
   }
   .wordContainer {
+    justify-self: center;
     position: relative;
   }
   .word {
