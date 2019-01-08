@@ -7,11 +7,7 @@ export default class Word extends Component {
     const box = document.getElementById(`box${this.props.id}`);
     const rNum = Math.random();
 
-<<<<<<< HEAD
-    const distanceEachFrame = rNum < 0.2 ? 0.2 : rNum > 0.8 ? 0.8 : rNum;
-=======
     const distanceEachFrame = rNum < 0.2 ? 0.2 : rNum > 0.9 ? 0.9 : rNum;
->>>>>>> 7126669568076d4cdbded5af4484c0212e8856be
     const moveSideFunc =
       this.props.id % 2 === 0
         ? function(angle) {
@@ -26,7 +22,6 @@ export default class Word extends Component {
       let positionX = topPositionAdjustment;
       let positionY = 0;
       const animate = () => {
-
         positionX += distanceEachFrame;
         positionY += distanceEachFrame;
         box.style.top = `${positionX}px`;
@@ -41,6 +36,7 @@ export default class Word extends Component {
           ) {
             requestAnimationFrame(animate);
           }
+        } else {
         }
         if (positionX > 750) {
           this.props.gameOver();
