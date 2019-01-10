@@ -1,0 +1,40 @@
+var wordBank = {
+  word: [
+    'fish',
+    'ali',
+    'beer',
+    'cheese',
+    'elephant',
+    'grog',
+    'ice',
+    'jungle',
+    'keg',
+    'mother',
+    'nonsense',
+    'oyster',
+    'pepper',
+    'query',
+    'rush',
+    'serpent',
+    'tie',
+    'uranus',
+    'vice',
+    'weird',
+    'xylophone',
+    'yak',
+    'liar',
+    'dragon',
+    'zebra',
+    'hairy',
+    'fly',
+    'apple',
+    'bruise',
+    'chicken',
+    'drown',
+    'eel',
+    'ground',
+    'hello'
+  ]
+};
+
+export default wordBank;
