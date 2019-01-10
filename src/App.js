@@ -67,6 +67,23 @@ const GlobalStyle = createGlobalStyle`
   .message-div {
     text-align: center;
   }
+
+  .removed-item {
+    animation: removed-item-animation .6s cubic-bezier(.55,-0.04,.91,.94) forwards;
+}
+ 
+@keyframes removed-item-animation {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+ 
+    to {
+        opacity: 0;
+        transform: scale(0);
+    }
+}
+
   `;
 
 const AppContent = styled.article`
@@ -143,7 +160,6 @@ class App extends Component {
       );
     });
     this.TypeSwitch.on('complete', () => {
-      console.log(this.state.currentEnemy.word);
       this.textToSpeech();
       this.removeWord();
       var remainingEnemies = this.state.fallingWords.filter(enemy => {
@@ -172,7 +188,6 @@ class App extends Component {
         isPlaying: true
       });
     }
-    console.log('here ya go');
     this.messageType = 'playingGame';
     setTimeout(() => {
       this.setState(state => ({
@@ -255,6 +270,7 @@ class App extends Component {
     const adjustedWordArray = this.state.fallingWords;
     const adjustedWord = adjustedWordArray[this.state.currentEnemyIndex];
     adjustedWord.isDead = true;
+
     this.setState(state => ({
       stats: {
         score: state.stats.score + 200,

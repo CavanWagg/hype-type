@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 
 export default class Word extends Component {
   componentDidMount() {
+    // this.myTween = TweenMax.to(this.myElement, 1, { x: 100, y: 100 });
     const appContent = document.getElementById('app-content');
     const box = document.getElementById(`box${this.props.id}`);
     const rNum = Math.random();
@@ -36,6 +37,7 @@ export default class Word extends Component {
           ) {
             requestAnimationFrame(animate);
           }
+        } else {
         }
         if (positionX > 750) {
           this.props.gameOver();
@@ -67,7 +69,17 @@ export default class Word extends Component {
         className="wordContainer"
         data-container={this.props.enemyIndex}
       >
-        {this.props.isDead ? null : (
+        {this.props.isDead ? (
+          <div
+            id={`box${this.props.id}`}
+            className="word removed-item"
+            style={style}
+            data-word={this.props.enemyIndex}
+          >
+            {this.props.letterArray}
+            <i data-enemy={this.props.enemyIndex} />
+          </div>
+        ) : (
           <div
             id={`box${this.props.id}`}
             className="word"
