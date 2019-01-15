@@ -1,31 +1,22 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
 import helpers from './utils/helpers';
-import { createGlobalStyle } from 'styled-components';
+import { globalStyle, createGlobalStyle } from '@smooth-ui/core-sc';
+
 import TypeSwitch from 'type-switch';
 import wordBank from './data/wordBank';
 import Word from './components/Word';
 import waves from './data/waves';
 import Message from './components/Message';
+import { ThemeProvider } from '@smooth-ui/core-sc';
+import { Box } from '@smooth-ui/core-sc';
+import theme from './theme';
 
 //* Styles
 
-const GlobalStyle = createGlobalStyle`
-  *,
-  *:before,
-  *:after {
-  box-sizing: border-box;
-  }
-  body {
-    margin: 40px;
-    font-family: 'Open Sans', 'sans-serif';
-    background-color: #fff;
-  }
-  h1,
-  p {
-  margin: 0;
-  height: 30px;
-  }
+const GlobalStyle = createGlobalStyle`${globalStyle()};
+
+
   .wordContainer {
     justify-self: center;
     position: relative;
@@ -34,9 +25,9 @@ const GlobalStyle = createGlobalStyle`
     display: flex;
   }
   .letter {
-    color: black;
+    
     font-weight: bold;
-    background: aqua;
+    
   }
   @supports (display: grid) {
     .wrapper > * {
@@ -85,20 +76,6 @@ const GlobalStyle = createGlobalStyle`
 }
 
   `;
-
-const AppContent = styled.article`
-  /* 8 1/2 x 11 ratio */
-  height: 800px;
-  width: 620px;
-  margin: 50px auto;
-`;
-
-const AppSidebar = styled.aside`
-  @media screen and (min-width: 500px) {
-    float: left;
-    /* width: 19.1489%; */
-  }
-`;
 //* -------------------------------------------------------------------------
 
 class App extends Component {
@@ -162,7 +139,7 @@ class App extends Component {
     this.TypeSwitch.on('complete', () => {
       this.textToSpeech();
       this.removeWord();
-      var remainingEnemies = this.state.fallingWords.filter(enemy => {
+      let remainingEnemies = this.state.fallingWords.filter(enemy => {
         return !enemy.isDead;
       });
       if (remainingEnemies.length === 0) {
@@ -259,6 +236,7 @@ class App extends Component {
     speechSynthesis.speak(this.speaker);
   }
   removeWord() {
+    console.log('removeWord fired');
     this.setState(state => ({
       letters: state.letters + this.state.currentEnemy.word.charAt(0)
     }));
@@ -267,8 +245,8 @@ class App extends Component {
       this.TypeSwitch.getGameStats().currentIndex
     );
 
-    const adjustedWordArray = this.state.fallingWords;
-    const adjustedWord = adjustedWordArray[this.state.currentEnemyIndex];
+    let adjustedWordArray = this.state.fallingWords;
+    let adjustedWord = adjustedWordArray[this.state.currentEnemyIndex];
     adjustedWord.isDead = true;
 
     this.setState(state => ({
@@ -284,6 +262,29 @@ class App extends Component {
     }));
     this.TypeSwitch.resetGame();
   }
+
+  concludePath = index => {
+    const tiredEnemy = this.state.fallingWords[index];
+    this.letters = this.letters = tiredEnemy.word.charAt(0);
+    if (this.currentEnemy && tiredEnemy.word === this.currentEnemy.word) {
+      this.currentEnemy = null;
+      this.currentEnemyIndex = null;
+      this.TypeSwitch.resetGame();
+      document.addEventListener('keypress', this.findWord, false);
+    }
+
+    let adjustedWordArray = this.state.fallingWords;
+    adjustedWordArray[index].isDead = true;
+    this.setState({
+      fallingWords: adjustedWordArray
+    });
+    let remainingEnemies = this.state.fallingWords.filter(enemy => {
+      return !enemy.isDead;
+    });
+    if (!remainingEnemies.length) {
+      this.queueNextWave();
+    }
+  };
 
   handleClick() {
     this.queueNextWave(true);
@@ -327,14 +328,22 @@ class App extends Component {
       );
     });
     return (
-      <div className="wrapper">
-        <AppSidebar> Score {this.state.stats.score}</AppSidebar>
-        <AppContent id="app-content">
-          <div id="word-space">{allTheWords}</div>
-          {message}
-        </AppContent>
-        <GlobalStyle />
-      </div>
+      <ThemeProvider theme={theme}>
+        <Box display="grid" backgroundColor="primaryLight">
+          <div> Score {this.state.stats.score}</div>
+          <Box
+            height="800px"
+            width="620px"
+            m="50px auto"
+            backgroundColor="gray200"
+            id="app-content"
+          >
+            <div id="word-space">{allTheWords}</div>
+            {message}
+          </Box>
+          <GlobalStyle />
+        </Box>
+      </ThemeProvider>
     );
   }
 }

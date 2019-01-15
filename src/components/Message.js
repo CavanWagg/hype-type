@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { Button, Typography } from '@smooth-ui/core-sc';
 
 export default class Message extends Component {
   constructor(props) {
@@ -17,14 +18,16 @@ export default class Message extends Component {
       case 'startGame':
         message = (
           <div className="message-div">
-            <h1>Hype-Type</h1>
-            <button
+            <Typography variant="display-3">Hype Type</Typography>
+            <Button
+              variant="primary"
+              size="lg"
               onClick={() => {
                 this.handleClick();
               }}
             >
               Begin
-            </button>
+            </Button>
           </div>
         );
         break;
@@ -32,13 +35,15 @@ export default class Message extends Component {
         message = (
           <div className="message-div">
             <h1>Game Over</h1>
-            <button
+            <Button
+              variant="primary"
+              size="lg"
               onClick={() => {
                 this.handleClick();
               }}
             >
               Play Again
-            </button>
+            </Button>
           </div>
         );
         break;

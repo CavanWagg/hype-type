@@ -1,13 +1,14 @@
 import React from 'react';
+import { Typography } from '@smooth-ui/core-sc';
 
 function helpers() {}
 
 helpers.createWord = string => {
   return string.split('').map((letter, index) => {
     var letterElement = (
-      <p className="letter" key={index}>
+      <Typography variant="h5" color="gray100" className="letter" key={index}>
         {letter}
-      </p>
+      </Typography>
     );
     return letterElement;
   });
