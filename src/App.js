@@ -1,31 +1,21 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
 import helpers from './utils/helpers';
-import { createGlobalStyle } from 'styled-components';
+import { globalStyle, createGlobalStyle } from '@smooth-ui/core-sc';
 import TypeSwitch from 'type-switch';
 import wordBank from './data/wordBank';
 import Word from './components/Word';
 import waves from './data/waves';
 import Message from './components/Message';
+import { ThemeProvider } from '@smooth-ui/core-sc';
+import { Box } from '@smooth-ui/core-sc';
+import theme from './theme';
 
 //* Styles
 
-const GlobalStyle = createGlobalStyle`
-  *,
-  *:before,
-  *:after {
-  box-sizing: border-box;
-  }
-  body {
-    margin: 40px;
-    font-family: 'Open Sans', 'sans-serif';
-    background-color: #fff;
-  }
-  h1,
-  p {
-  margin: 0;
-  height: 30px;
-  }
+const GlobalStyle = createGlobalStyle`${globalStyle()};
+
+
   .wordContainer {
     justify-self: center;
     position: relative;
@@ -34,9 +24,7 @@ const GlobalStyle = createGlobalStyle`
     display: flex;
   }
   .letter {
-    color: black;
     font-weight: bold;
-    background: aqua;
   }
   @supports (display: grid) {
     .wrapper > * {
@@ -67,38 +55,21 @@ const GlobalStyle = createGlobalStyle`
   .message-div {
     text-align: center;
   }
-
-  .removed-item {
-    animation: removed-item-animation .6s cubic-bezier(.55,-0.04,.91,.94) forwards;
+   .fade-exiting {
+    animation: fade-exiting-animation .6s cubic-bezier(.55,-0.04,.91,.94) forwards;
 }
  
-@keyframes removed-item-animation {
+@keyframes fade-exiting-animation {
     from {
-        opacity: 1;
+         opacity: 1;
         transform: scale(1);
     }
- 
     to {
         opacity: 0;
         transform: scale(0);
     }
-}
-
+} 
   `;
-
-const AppContent = styled.article`
-  /* 8 1/2 x 11 ratio */
-  height: 800px;
-  width: 620px;
-  margin: 50px auto;
-`;
-
-const AppSidebar = styled.aside`
-  @media screen and (min-width: 500px) {
-    float: left;
-    /* width: 19.1489%; */
-  }
-`;
 //* -------------------------------------------------------------------------
 
 class App extends Component {
@@ -112,21 +83,15 @@ class App extends Component {
         accuracy: 100
       },
       fallingWords: [],
-      isPlaying: false,
+      waveLaunching: false,
       totalKeystrokes: 0,
       totalMistakes: 0,
-      waveCount: 0,
-      letters: 'abcdefghijklmnopqrstuvwxyz',
-      currentEnemyIndex: null,
-      currentEnemy: null
+      waveCount: 0
     };
+    this.letters = 'abcdefghijklmnopqrstuvwxyz';
+    this.currentEnemyIndex = null;
+    this.currentEnemy = null;
     this.messageType = 'startGame';
-    this.handleClick = this.handleClick.bind(this);
-    this.queueNextWave = this.queueNextWave.bind(this);
-    this.findWord = this.findWord.bind(this);
-    this.reduceLetters = this.reduceLetters.bind(this);
-    this.removeWord = this.removeWord.bind(this);
-    this.textToSpeech = this.textToSpeech.bind(this);
     this.TypeSwitch = new TypeSwitch({ stubbornMode: true });
     this.TypeSwitch.on('incorrect', () => {
       this.setState(state => ({
@@ -155,14 +120,14 @@ class App extends Component {
       }));
       this.TypeSwitch.broadcast('targetAcquired');
       helpers.changeLetterColor(
-        this.state.currentEnemy.wordIdentifier,
+        this.currentEnemy.wordIdentifier,
         this.TypeSwitch.getGameStats().currentIndex
       );
     });
     this.TypeSwitch.on('complete', () => {
       this.textToSpeech();
       this.removeWord();
-      var remainingEnemies = this.state.fallingWords.filter(enemy => {
+      let remainingEnemies = this.state.fallingWords.filter(enemy => {
         return !enemy.isDead;
       });
       if (remainingEnemies.length === 0) {
@@ -175,7 +140,7 @@ class App extends Component {
     });
   }
 
-  queueNextWave(firstRound = false) {
+  queueNextWave = (firstRound = false) => {
     if (firstRound) {
       this.TypeSwitch.broadcast('gamestart');
       this.setState({
@@ -184,8 +149,7 @@ class App extends Component {
           currentStreak: 0,
           longestStreak: 0,
           accuracy: 100
-        },
-        isPlaying: true
+        }
       });
     }
     this.messageType = 'playingGame';
@@ -197,13 +161,21 @@ class App extends Component {
       }));
       this.launchWave();
     }, 1000);
-  }
+  };
 
-  launchWave() {
+  launchWave = () => {
+    this.setState({ waveLaunching: true });
     document.addEventListener('keypress', this.findWord, false);
+    this.TypeSwitch.start('');
+    this.TypeSwitch.pauseGame();
+    this.populateWave();
+  };
+
+  populateWave = () => {
     const waveData = waves(this.state.waveCount);
     const newWave = waveData.map((enemy, index) => {
       const typeWord = {};
+
       typeWord.componentIdentifier = '[data-enemy="' + index + '"]';
       typeWord.wordIdentifier = '[data-word="' + index + '"]';
       typeWord.containerIdentifier = '[data-container="' + index + '"]';
@@ -212,15 +184,30 @@ class App extends Component {
       // the word is a string
       typeWord.word = wordString;
       typeWord.letterArray = helpers.createWord(typeWord.word);
+      typeWord.Component = (
+        <Word
+          key={this.state.waveCount.toString() + index}
+          id={this.state.waveCount.toString() + index}
+          row={index < 4 ? 1 : index < 8 ? 2 : 3}
+          isDead={typeWord.isDead}
+          enemyIndex={index}
+          letterArray={typeWord.letterArray}
+          reduceLetters={this.reduceLetters}
+          gameOver={this.gameOver}
+          containerIdentifier={typeWord.containerIdentifier}
+        />
+      );
       return typeWord;
     });
-    this.setState({ fallingWords: newWave });
-  }
+    this.setState({
+      fallingWords: newWave
+    });
+  };
 
-  reduceLetters(wordBank) {
+  reduceLetters = wordBank => {
     // random letter
-    const availableCharacter = this.state.letters[
-      Math.floor(Math.random() * this.state.letters.length)
+    const availableCharacter = this.letters[
+      Math.floor(Math.random() * this.letters.length)
     ];
     // returns an array of all the words in the wordbank that start with the availableCharacter.
     var availableWordArray = wordBank.filter(word => {
@@ -229,46 +216,40 @@ class App extends Component {
     // returns a random word(string) that is from the availableWordArray.
     var newWord =
       availableWordArray[Math.floor(Math.random() * availableWordArray.length)];
-    this.setState(state => ({
-      letters: state.letters.replace(newWord.charAt(0), '')
-    }));
+    this.letters = this.letters.replace(newWord.charAt(0), '');
     return newWord;
-  }
+  };
 
-  findWord(e) {
+  findWord = e => {
     const pressedCharCode = typeof e.which === 'number' ? e.which : e.keycode;
     const pressedKeyChar = String.fromCharCode(pressedCharCode);
     this.state.fallingWords.forEach((target, index) => {
-      if (target.word.charAt(0) === pressedKeyChar) {
-        this.setState({
-          currentEnemyIndex: index,
-          currentEnemy: target
-        });
+      if (target.word.charAt(0) === pressedKeyChar && !target.isDead) {
+        this.currentEnemyIndex = index;
+        this.currentEnemy = target;
         this.TypeSwitch.changeCurrentIndex(1);
         this.TypeSwitch.start(target.word);
         this.TypeSwitch.broadcast('targetAcquired');
-        helpers.changeLetterColor(target.wordIdentifier, 1);
+        helpers.changeLetterColor(this.currentEnemy.wordIdentifier, 1);
         document.removeEventListener('keypress', this.findWord);
       }
     });
-  }
-  textToSpeech() {
+  };
+  textToSpeech = () => {
     this.speaker = new SpeechSynthesisUtterance();
     this.speaker.lang = 'en-US';
-    this.speaker.text = this.state.currentEnemy.word;
+    this.speaker.text = this.currentEnemy.word;
     speechSynthesis.speak(this.speaker);
-  }
-  removeWord() {
-    this.setState(state => ({
-      letters: state.letters + this.state.currentEnemy.word.charAt(0)
-    }));
+  };
+  removeWord = () => {
+    this.letters = this.letters + this.currentEnemy.word.charAt(0);
     helpers.changeLetterColor(
-      this.state.currentEnemy.wordIdentifier,
+      this.currentEnemy.wordIdentifier,
       this.TypeSwitch.getGameStats().currentIndex
     );
 
-    const adjustedWordArray = this.state.fallingWords;
-    const adjustedWord = adjustedWordArray[this.state.currentEnemyIndex];
+    let adjustedWordArray = this.state.fallingWords;
+    let adjustedWord = adjustedWordArray[this.currentEnemyIndex];
     adjustedWord.isDead = true;
 
     this.setState(state => ({
@@ -278,16 +259,39 @@ class App extends Component {
         currentStreak: state.stats.currentStreak,
         longestStreak: state.stats.longestStreak
       },
-      fallingWords: adjustedWordArray,
-      currentEnemy: null,
-      currentEnemyIndex: null
+      fallingWords: adjustedWordArray
     }));
+    this.currentEnemy = null;
+    this.currentEnemyIndex = null;
     this.TypeSwitch.resetGame();
-  }
+  };
 
-  handleClick() {
+  concludePath = index => {
+    const tiredEnemy = this.state.fallingWords[index];
+    this.letters = this.letters = tiredEnemy.word.charAt(0);
+    if (this.currentEnemy && tiredEnemy.word === this.currentEnemy.word) {
+      this.currentEnemy = null;
+      this.currentEnemyIndex = null;
+      this.TypeSwitch.resetGame();
+      document.addEventListener('keypress', this.findWord, false);
+    }
+
+    let adjustedWordArray = this.state.fallingWords;
+    adjustedWordArray[index].isDead = true;
+    this.setState({
+      fallingWords: adjustedWordArray
+    });
+    let remainingEnemies = this.state.fallingWords.filter(enemy => {
+      return !enemy.isDead;
+    });
+    if (!remainingEnemies.length) {
+      this.queueNextWave();
+    }
+  };
+
+  handleClick = () => {
     this.queueNextWave(true);
-  }
+  };
 
   gameOver = () => {
     console.log('you lost man');
@@ -311,30 +315,26 @@ class App extends Component {
         messageType={this.messageType}
       />
     );
-    const allTheWords = this.state.fallingWords.map((word, index) => {
-      return (
-        <Word
-          key={this.state.waveCount.toString() + index}
-          id={this.state.waveCount.toString() + index}
-          row={index < 4 ? 1 : index < 8 ? 2 : 3}
-          isDead={word.isDead}
-          enemyIndex={index}
-          letterArray={word.letterArray}
-          reduceLetters={this.reduceLetters}
-          gameOver={this.gameOver}
-          containerIdentifier={word.containerIdentifier}
-        />
-      );
+    const allTheWords = this.state.fallingWords.map(enemy => {
+      return enemy.isDead ? null : enemy.Component;
     });
     return (
-      <div className="wrapper">
-        <AppSidebar> Score {this.state.stats.score}</AppSidebar>
-        <AppContent id="app-content">
-          <div id="word-space">{allTheWords}</div>
-          {message}
-        </AppContent>
-        <GlobalStyle />
-      </div>
+      <ThemeProvider theme={theme}>
+        <Box display="grid" backgroundColor="primaryLight">
+          <div> Score {this.state.stats.score}</div>
+          <Box
+            id="app-content"
+            height="800px"
+            width="620px"
+            m="50px auto"
+            backgroundColor="gray200"
+          >
+            <div id="word-space">{allTheWords}</div>
+            {message}
+          </Box>
+          <GlobalStyle />
+        </Box>
+      </ThemeProvider>
     );
   }
 }
