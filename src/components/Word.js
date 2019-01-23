@@ -5,10 +5,10 @@ import { Box } from '@smooth-ui/core-sc';
 export default class Word extends Component {
   componentDidMount() {
     const appContent = document.getElementById('app-content');
-    const box = document.getElementById(`box${this.props.id}`);
+    let box = document.getElementById(`box${this.props.id}`);
     const rNum = Math.random();
 
-    const distanceEachFrame = rNum < 0.8 ? 5 : rNum > 0.9 ? 5 : rNum;
+    const distanceEachFrame = rNum < 0.4 ? 0.4 : rNum > 0.9 ? 0.9 : rNum;
     const moveSideFunc =
       this.props.id % 2 === 0
         ? function(angle) {
@@ -25,30 +25,10 @@ export default class Word extends Component {
       const animate = () => {
         positionX += distanceEachFrame;
         positionY += distanceEachFrame;
-
         box.style.top = `${positionX}px`;
         box.style.left = `${50 * moveSideFunc(positionY / 50)}px`;
-
-        if (
-          positionX <
-          appContent.clientHeight -
-            box.clientHeight -
-            20 +
-            topPositionAdjustment
-        ) {
-          requestAnimationFrame(animate);
-        }
         if (positionX > 740) {
-          var closure = (function() {
-            var executed = false;
-            return function() {
-              if (!executed) {
-                executed = true;
-                this.props.gameOver();
-              }
-            };
-          })();
-          closure();
+          this.props.gameOver();
         }
         if (
           positionX <
@@ -60,32 +40,41 @@ export default class Word extends Component {
           requestAnimationFrame(animate);
         }
       };
+
+      console.log(positionX);
+      if (
+        positionX <
+        appContent.clientHeight - box.clientHeight - 20 + topPositionAdjustment
+      ) {
+        requestAnimationFrame(animate);
+      }
     });
   }
 
   render() {
     const style = {
+      background: 'blue',
       position: 'relative',
       padding: '5px 10px 0px 10px',
       borderRadius: '50%',
+      display: 'flex',
       top: this.props.row < 2 ? 0 : this.props.row < 3 ? -30 : -60
     };
     return (
       <div
-        id={`container${this.props.id}`}
         className="wordContainer"
+        id={`container${this.props.id}`}
         data-container={this.props.enemyIndex}
       >
-        <Box
+        <div
           id={`box${this.props.id}`}
-          className="word"
-          backgroundColor="primary"
-          style={style}
+          className={`fade`}
           data-word={this.props.enemyIndex}
+          style={style}
         >
           {this.props.letterArray}
           <i data-enemy={this.props.enemyIndex} />
-        </Box>
+        </div>
       </div>
     );
   }
